@@ -115,7 +115,7 @@ class WriteWeekly(QWidget):
 
 	def sendEmail(self):
 		# 登录邮箱
-		yag = yagmail.SMTP(user = 'xxxx@xxx.com', password = 'xxxx', host = 'xxxx.com', port = '', smtp_starttls = False)
+		yag = yagmail.SMTP(user = 'xxxx@xxx.com', password = 'xxxx', host = 'xxxx.com', port = 'xxx', smtp_starttls = False)
 		# 收件人,允许多个收件人，用;隔开
 		to = self.receiverEdit.text().split(';')
 		# 主题
