@@ -1,6 +1,10 @@
 # -*- coding: utf-8 -*-
 '''
-1. 每天周五下午19点自动弹出提示框，提醒我发周报
+1. 每天周五下午19点自动弹出提示框，提醒我发周报(自动提醒的功能，windows用任务计划程序，linux用crontab)
+   如果用python实现普通的定时，比如睡眠多久执行，但是每天周五下午19点这个定时比较特殊，但是python里也有方法实现
+   我使用过定时任务框架APScheduler，就可以实现这个功能，但是针对现在的这个问题，由于使用APScheduler在子线程中更新了UI，所以导致
+   UI界面未响应，所以我舍弃了这个框架，改用系统的方法，但是不涉及UI的可以用该框架，或许UI也可以用，但是我没有找到好的方法
+2. 在代码里填上你的邮箱，密码，服务器即可
 2. 填写提示框里的内容，点击发送邮件即可
 '''
 import sys
@@ -8,7 +12,6 @@ import yagmail
 from PyQt5.QtWidgets import QApplication, QWidget, QPushButton, QLabel, QInputDialog, QLineEdit, QTextEdit, QGridLayout, QHBoxLayout, QVBoxLayout, QFileDialog, QMessageBox
 from PyQt5.QtCore import QCoreApplication, Qt, QThread
 from PyQt5.QtGui import QFont
-from apscheduler.schedulers.blocking import BlockingScheduler
 import time
 
 #提醒框
@@ -37,6 +40,7 @@ class AlertWeekly(QWidget):
 	def closeDialog(self):
 		self.close()
 
+# 发送邮件界面
 class WriteWeekly(QWidget):
 	def __init__(self):
 		super().__init__()
@@ -100,7 +104,8 @@ class WriteWeekly(QWidget):
 
 	def showDialog(self):
 		self.show()
-
+	
+	# 关闭窗口时提醒
 	def closeEvent(self, event):
 		reply = QMessageBox.question(self, '确认', '确认退出吗', QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
 		if reply == QMessageBox.Yes:
@@ -110,7 +115,7 @@ class WriteWeekly(QWidget):
 
 	def sendEmail(self):
 		# 登录邮箱
-		yag = yagmail.SMTP(user = 'liangzhuo.xie@amlogic.com', password = '4$Linux', host = 'mail-sz2.amlogic.com', port = '465', smtp_starttls = False)
+		yag = yagmail.SMTP(user = 'xxxx@xxx.com', password = 'xxxx', host = 'xxxx.com', port = '', smtp_starttls = False)
 		# 收件人,允许多个收件人，用;隔开
 		to = self.receiverEdit.text().split(';')
 		# 主题
@@ -121,7 +126,7 @@ class WriteWeekly(QWidget):
 			files = ''
 		# 内容
 		contents = self.contentEdit.toPlainText()
-		# 发送(to:收件人，subject：邮箱主题，contents: 邮箱内容,附件：contents = [contents, 'C://Users//liangzhuo.xie//Desktop//log.txt'])
+		# 发送(to:收件人，subject：邮箱主题，contents: 邮箱内容,附件：contents = [contents, 'C://Users//Desktop//log.txt'])
 		yag.send(to = to, subject = subject, contents = [contents, files])
 		print('%s\n %s\n %s\n %s\n' % (to, subject, files, contents))
 		# 发送成功后清空文本内容
@@ -131,19 +136,8 @@ class WriteWeekly(QWidget):
 		self.contentEdit.clear()
 		self.fileBtn.setText('选择文件')
 
-class showThread(QThread):
-	def __init__(self):
-		super().__init__()
-		self.alert = AlertWeekly()
-		self.sche = BlockingScheduler()
-
-	def run(self):
-		self.sche.add_job(self.alert.show, 'cron', day_of_week='wed', hour=17, minute=28)
-		self.sche.start()
-
 if __name__ == '__main__':
 	app = QApplication(sys.argv)
-	scheduler = BlockingScheduler()
 	alertDialog = AlertWeekly()
 	writeDialog = WriteWeekly()
 	# 确认按钮按下，先关闭提醒窗口，再打开写邮件的窗口
